@@ -1,0 +1,416 @@
+<!doctype html>
+<html ng-app="qma">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Qma</title>
+		<link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen" />
+		
+		<style>
+			body {
+				padding-top: 55px;
+			}
+		</style>
+	</head>
+	<body ng-controller="TestController">
+
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<span class="brand">MessBuster</span>
+				<ul class="nav">
+					<li>
+						<div ng-click="verbose = !verbose">
+							<button type="button" ng-show="!verbose" class="btn btn-inverse">
+								Enable verbose mode
+							</button>
+							<button type="button" ng-show="verbose" class="btn btn-inverse">
+								Disable verbose mode
+							</button>
+						</div>
+						<!-- <input id="verbose" type="checkbox" ng-model="verbose" /><label for="verbose">verbose mode?</label> -->
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row-fluid">
+				<div class="span3">
+
+					<div ng-include src="'sidebar.html'"></div>
+
+				</div>
+				
+				<div class="span9">
+					
+					<div ng-view></div>
+					
+				</div>
+			</div>
+		</div>
+
+		<script src="data.js"></script>
+		<script src="lib/angular/angular.min.js"></script>
+		<script src="js/controllers.js"></script>
+		<!-- <script src="lib/bootstrap/js/bootstrap.min.js"></script> -->
+		
+		<script type="text/ng-template" id="welcome.html">
+			<blockquote>
+			  <h1>MessBuster</h1>
+			  <p>Pierwszy na świecie asystent modeli qcadoo o napędzie awesomeowym!</p>
+			  <p><small>Marcin Kubala</small></p>
+			</blockquote>
+		</script>
+		
+		<script type="text/ng-template" id="sidebar.html">
+			<div class="well">
+				
+				<form class="form-search pull-right">
+					<div class="input-append">
+						<input ng-model="modelsFilterText.$" type="text" class="input-medium search-query" placeholder="Search" />
+						<button class="btn" type="submit" ng-click="modelsFilterText = ''"><i class="icon-remove"></i></button>
+					</div>
+				</form>
+						
+				<ul class="nav nav-list" id="mainNavList">
+					<li ng-repeat="plugin in menuStruct | orderBy:'name' | filter:modelsFilterText">
+							<a href="#/plugin/{{plugin.name}}" ng-click="toggleMenuGroupVisible(plugin.name)">{{plugin.name}}</a>
+									
+							<ul class="nav nav-list" ng-show="isMenuGroupVisible(plugin.name) || modelsFilterText.$">
+								<li ng-repeat="model in plugin.models | orderBy:'name' | filter:modelsFilterText" ng-class="isActive(plugin.name, model.name)">
+									<a href="#/model/{{plugin.name}}-{{model.name}}">{{model.name}}</a>
+								</li>
+							</ul>
+					</li>
+				</ul>
+			</div>
+		</script>
+		
+		<script type="text/ng-template" id="pluginDetails.html">
+			<div>
+				<h3>Plugin {{plugin.identifier}}</h3>
+				<p>{{plugin.pluginInfo.description}}</p>
+                <h4>Constants</h4>
+                <p>TODO</p>
+			</div>
+		</script>
+		
+		
+		<script type="text/ng-template" id="modelDetails.html">
+			<div>
+				<h3>
+					<small><a href="#/plugin/{{model.pluginIdentifier}}">{{model.pluginIdentifier}}</a> / </small>{{model.name}}
+				</h3>
+
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>
+								<h3>Fields</h3>
+							</th>
+							<th>
+								<form class="form-search pull-right">
+									<div class="input-append">
+										<input ng-model="modelFieldsFilter.$" id="modelFieldssFilter" type="text" class="search-query" placeholder="Search in fields.." />
+										<button class="btn" type="submit" ng-click="modelFieldsFilter.$ = ''"><i class="icon-remove"></i></button>
+									</div>
+								</form>
+							</th>
+						</tr>
+						<tr>
+							<th style="width: 100px;" ng-click="fieldsReverseOrder = !fieldsReverseOrder; fieldsOrderBy = 'fieldType.name'">Type 
+								<span ng-show="fieldsOrderBy == 'fieldType.name'">
+									<i class="icon-arrow-up" ng-show="!fieldsReverseOrder"></i>
+									<i class="icon-arrow-down" ng-show="fieldsReverseOrder"></i>
+								</span>
+							</th>
+							<th ng-click="fieldsReverseOrder = !fieldsReverseOrder; fieldsOrderBy = 'name'">Name 
+								<span ng-show="fieldsOrderBy == 'name'">
+									<i class="icon-arrow-up" ng-show="!fieldsReverseOrder"></i>
+									<i class="icon-arrow-down" ng-show="fieldsReverseOrder"></i>
+								</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="field in model.fields | orderBy:fieldsOrderBy:fieldsReverseOrder | filter:modelFieldsFilter" ng-class="getMarkedClass(field)" scroll-if="shouldScroll(field)">
+							<td style="width: 100px;">
+								<span class="pull-right">{{field.fieldType.name}}</span>
+							</td>
+							<td>
+								<strong>{{field.name}}</strong>
+								<ng-include src="field.fieldType.name"></ng-include>
+								<small ng-show="verbose">{{field | json}}</small>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+						
+				<table class="table table-stripped table-hover">
+					<thead>
+						<tr>
+							<th>
+								<h3>Hooks</h3>
+							</th>
+							<th>
+								<form class="form-search pull-right">
+									<div class="input-append">
+										<input ng-model="modelHooksFilter.$" id="modelHooksFilter" type="text" class="search-query" placeholder="Search in hooks.." />
+										<button class="btn" type="submit" ng-click="modelHooksFilter.$ = ''"><i class="icon-remove"></i></button>
+									</div>
+								</form>
+							</th>
+						</tr>
+						<tr>
+							<th style="width: 100px;" ng-click="hooksReverseOrder = !hooksReverseOrder; hooksOrderBy = 'hookType'">Type 
+								<span ng-show="hooksOrderBy == 'hookType'">
+									<i class="icon-arrow-up" ng-show="!hooksReverseOrder"></i>
+									<i class="icon-arrow-down" ng-show="hooksReverseOrder"></i>
+								</span>
+							</th>
+							<th ng-click="hooksReverseOrder = !hooksReverseOrder; hooksOrderBy = 'hookClass'">Method 
+								<span ng-show="hooksOrderBy == 'hookClass,hookMethod'">
+									<i class="icon-arrow-up" ng-show="!hooksReverseOrder"></i>
+									<i class="icon-arrow-down" ng-show="hooksReverseOrder"></i>
+								</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="hook in model.hooks | orderBy:hooksOrderBy:hooksReverseOrder | filter:modelHooksFilter">
+							<td style="width: 100px;">
+								<span class="pull-right">{{hook.hookType}}</span>
+							</td>
+							<td>
+								{{
+									pkgAndName = getClassPkgAndName(hook.hookClass);
+									null;
+								}}
+								<small>{{pkgAndName.classPackage}}</small>.{{pkgAndName.className}}.<strong>{{hook.hookMethod}}</strong>
+								<ng-include src="'injectorLink'" onload="element = hook"></ng-include>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</script>
+		
+		<script type="text/ng-template" id="belongsTo">
+			<p>
+				<ng-include src="'assocLink'"></ng-include>
+				<ng-include src="'commonFieldAttributes'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="collectionField">
+			<p>
+				<ng-include src="'assocLink'"></ng-include>
+				<br/>cascade:
+					<span class="label label-important" ng-show="field.fieldType.cascade == 'delete'">delete</span>
+					<span class="label label-warning" ng-show="field.fieldType.cascade == 'nullify'">nullify</span>
+				<ng-include src="'commonFieldAttributes'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="hasMany">
+			<ng-include src="'collectionField'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="manyToMany">
+			<ng-include src="'collectionField'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="tree">
+			<ng-include src="'collectionField'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="string">
+			<p>
+				<ng-include src="'commonFieldAttributes'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="dictionary">
+			<p>
+				<ng-include src="'commonFieldAttributes'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="integer">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="password">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="text">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="decimal">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="datetime">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="date">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="boolean">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="enum">
+			<p>
+				<ng-include src="'injectorLink'" onload="element = field"></ng-include>
+				<ng-include src="'fieldParameters'"></ng-include>
+				<p>
+					values: <span class="label" ng-repeat="value in field.fieldType.values">{{value}}</span> 
+				</p>
+				<ng-include src="'fieldValidators'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="priority">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="file">
+			<ng-include src="'defaultFieldTemplate'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="defaultFieldTemplate">
+			<p>
+				<ng-include src="'commonFieldAttributes'"></ng-include>
+			</p>
+		</script>
+		
+		<script type="text/ng-template" id="commonFieldAttributes">
+			<ng-include src="'injectorLink'" onload="element = field"></ng-include>
+			<ng-include src="'fieldParameters'"></ng-include>
+			<ng-include src="'fieldValidators'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="fieldParameters">
+			<div class="fieldParameters">
+				{{
+					parameters = field.fieldType.parameters;
+					null;
+				}}
+				<span class="label label-warning" ng-show="parameters.readonly">read-only</span>
+				<span class="label" ng-show="verbose &amp;&amp; !parameters.readonly">read-write</span>
+				<span class="label label-warning" ng-show="!parameters.persistent">not-persistent</span>
+				<span class="label" ng-show="verbose &amp;&amp; parameters.persistent">persistent</span>
+				<span class="label label-warning" ng-show="parameters.required">required</span>
+				<span class="label" ng-show="verbose &amp;&amp; !parameters.required">not-required</span>
+				<span class="label label-warning" ng-show="parameters.unique">unique</span>
+				<span class="label" ng-show="verbose &amp;&amp; !parameters.unique">not-unique</span>
+				<span class="label label-info" ng-show="parameters.default">default: '{{field.parameters.default}}'</span>
+				<span class="label" ng-show="verbose &amp;&amp; !parameters.default">without default</span>
+				<span class="label label-info" ng-show="parameters.copyable">copyable</span>
+				<span class="label" ng-show="!parameters.copyable">not-copyable</span>
+			</div>
+		</script>
+		
+		<script type="text/ng-template" id="fieldValidators">
+			<div class="row-fluid" ng-show="field.validators.length > 0 || field.implicitValidators.length > 0">
+				<div class="span1"></div>
+				<div class="span6 fieldValidators">
+					<table class="table table-condensed table-bordered">
+						<thead>
+							<tr>
+								<th colspan="2">Validators</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="validator in field.validators | orderBy:validatorType">
+								<td class="span3">
+									<span class="pull-right">
+									{{validator.validatorType}}
+									</span>
+									<div class="pull-right">
+										<span class="label label-important" ng-show="!validator.hasCorrectFieldType">incompatible with field type!</span>
+									</div>
+								</td>
+								<td>
+									<ng-include src="validator.validatorType"></ng-include>
+								</td>
+							</tr>
+							<tr ng-repeat="validator in field.implicitValidators | orderBy:validatorType">
+								<td class="span3">
+									<span class="pull-right">
+									{{validator.validatorType}}
+									</span>
+									<div class="pull-right">
+										<span class="label label-important" ng-show="!validator.hasCorrectFieldType">incompatible with field type!</span>
+									</div>
+								</td>
+								<td>
+									<ng-include src="validator.validatorType"></ng-include>
+									<span class="label label-warning">implicit</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</script>
+		
+		<script type="text/ng-template" id="validatesUnscaledValue">
+			<ng-include src="'validatesLength'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="validatesScale">
+			<ng-include src="'validatesLength'"></ng-include>
+		</script>
+		
+		<script type="text/ng-template" id="validatesLength">
+			{{
+				params = validator.params;
+				null;
+			}}
+			<span class="label label-info" ng-show="isDefined(params.min)">&ge; {{params.min}}</span>
+			<span class="label label-info" ng-show="isDefined(params.is)">&equiv; {{params.is}}</span>
+			<span class="label label-info" ng-show="isDefined(params.max)">&le; {{params.max}}</span>
+		</script>
+		
+		<script type="text/ng-template" id="validatesRange">
+			{{
+				params = validator.params;
+				null;
+			}}
+			<span class="label label-info" ng-show="isDefined(params.from)">&ge; {{params.from}}</span>
+			<span class="label label-info" ng-show="isDefined(params.to)">&le; {{params.to}}</span>
+			<span class="label label-warning" ng-show="isDefined(params.exclusively)">exclusively</span>
+		</script>
+		
+		<script type="text/ng-template" id="assocLink">
+			{{
+				pluginId = field.fieldType.relatedModel.pluginIdentifier || model.pluginIdentifier;
+				modelName = field.fieldType.relatedModel.modelName;
+				joinField = field.fieldType.joinField;
+				null;
+			}}
+			<span class="assocLink">
+				<i class="icon-share-alt"></i>
+				<a href="#/plugin/{{pluginId}}">{{pluginId}}</a>
+				/
+				<a href="#/model/{{pluginId}}-{{modelName}}">{{modelName}}</a>
+				<span ng-show="joinField">
+					@
+					<a ng-show="joinField" href="#/model/{{pluginId}}-{{modelName}}/field/{{joinField}}">{{joinField}}</a>
+				</span>
+			</span>
+		</script>
+		
+		<script type="text/ng-template" id="injectorLink">
+			<div class="injectorLink" ng-show="element.injectorPlugin">
+				<i class="icon-random"></i> Injected from <a href="#/plugin/{{element.injectorPlugin}}">{{element.injectorPlugin}}</a>
+			</div>
+		</script>
+		
+	</body>
+</html>
