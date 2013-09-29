@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.plugin.domain
+package pl.mkubala.messBuster.plugin.domain
 
 import scala.xml.Node
 

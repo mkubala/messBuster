@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.model.domain
+package pl.mkubala.messBuster.model.domain
 
 trait Injectable {
   val injectorPlugin: Option[String]

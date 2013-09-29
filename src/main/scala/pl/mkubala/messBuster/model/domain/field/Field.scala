@@ -1,11 +1,11 @@
-package pl.mkubala.qmdt.model.domain.field
+package pl.mkubala.messBuster.model.domain.field
 
 import scala.xml.Node
 import scala.xml.Utility.trim
-import pl.mkubala.qmdt.model.domain.Injectable
+import pl.mkubala.messBuster.model.domain.Injectable
 import scala.xml.NodeSeq.seqToNodeSeq
-import pl.mkubala.qmdt.model.domain.Injector
-import pl.mkubala.qmdt.model.domain.EmptyInjectorPlugin
+import pl.mkubala.messBuster.model.domain.Injector
+import pl.mkubala.messBuster.model.domain.EmptyInjectorPlugin
 
 case class Field(fieldType: FieldType, name: String, validators: Seq[FieldValidator], implicitValidators: Set[FieldValidator], injectorPlugin: Option[String]) extends Injectable
 

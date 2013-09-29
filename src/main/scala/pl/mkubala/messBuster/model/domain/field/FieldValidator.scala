@@ -1,7 +1,7 @@
-package pl.mkubala.qmdt.model.domain.field
+package pl.mkubala.messBuster.model.domain.field
 
 import scala.xml.Node
-import pl.mkubala.qmdt.model.domain.Hook
+import pl.mkubala.messBuster.model.domain.Hook
 import scala.xml.NodeSeq.seqToNodeSeq
 import pl.mkubala.xml.NodeAttributesReader
 

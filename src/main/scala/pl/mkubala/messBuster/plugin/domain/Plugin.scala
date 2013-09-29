@@ -1,10 +1,10 @@
-package pl.mkubala.qmdt.plugin.domain
+package pl.mkubala.messBuster.plugin.domain
 
-import pl.mkubala.qmdt.model.domain.QcadooModelParser
-import pl.mkubala.qmdt.model.domain.Model
-import pl.mkubala.qmdt.model.domain.Dictionary
-import pl.mkubala.qmdt.model.domain.Dictionary
-import pl.mkubala.qmdt.model.domain.DictionaryItem
+import pl.mkubala.messBuster.model.domain.QcadooModelParser
+import pl.mkubala.messBuster.model.domain.Model
+import pl.mkubala.messBuster.model.domain.Dictionary
+import pl.mkubala.messBuster.model.domain.Dictionary
+import pl.mkubala.messBuster.model.domain.DictionaryItem
 
 case class Plugin(identifier: String, pluginInfo: PluginInfo, models: Map[String, Model] = Map(), dictionaries: List[Dictionary] = Nil) {
 

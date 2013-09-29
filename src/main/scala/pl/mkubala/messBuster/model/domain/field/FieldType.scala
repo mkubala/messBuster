@@ -1,10 +1,10 @@
-package pl.mkubala.qmdt.model.domain.field
+package pl.mkubala.messBuster.model.domain.field
 
 import scala.xml.Node
-import pl.mkubala.qmdt.model.domain.ModelIdentifier
+import pl.mkubala.messBuster.model.domain.ModelIdentifier
 import pl.mkubala.xml.NodeAttributesReader
 
-import pl.mkubala.qmdt.model.domain.field.FieldValidator.nodeToFieldValidator
+import pl.mkubala.messBuster.model.domain.field.FieldValidator.nodeToFieldValidator
 
 object FieldType extends NodeAttributesReader {
 

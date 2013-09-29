@@ -1,8 +1,8 @@
-package pl.mkubala.qmdt.plugin.container
+package pl.mkubala.messBuster.plugin.container
 
-import pl.mkubala.qmdt.model.domain.ModelIdentifier
-import pl.mkubala.qmdt.plugin.domain.Plugin
-import pl.mkubala.qmdt.model.domain.Model
+import pl.mkubala.messBuster.model.domain.ModelIdentifier
+import pl.mkubala.messBuster.plugin.domain.Plugin
+import pl.mkubala.messBuster.model.domain.Model
 
 class PluginsHolder {
 

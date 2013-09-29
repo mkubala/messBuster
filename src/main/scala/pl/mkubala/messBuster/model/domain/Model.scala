@@ -1,10 +1,10 @@
-package pl.mkubala.qmdt.model.domain
+package pl.mkubala.messBuster.model.domain
 
 import scala.xml.Node
 import scala.xml.Utility.trim
 import scala.xml.XML.loadFile
-import pl.mkubala.qmdt.plugin.domain.PluginDescriptor
-import pl.mkubala.qmdt.model.domain.field.Field
+import pl.mkubala.messBuster.plugin.domain.PluginDescriptor
+import pl.mkubala.messBuster.model.domain.field.Field
 import pl.mkubala.xml.NodeAttributesReader
 
 case class Model(pluginIdentifier: String, name: String, fields: List[Field] = Nil, hooks: List[ModelHook] = Nil, attributes: ModelAttributes) {

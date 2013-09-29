@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.ui
+package pl.mkubala.messBuster.ui
 
 import swing._
 import java.awt.Color
@@ -12,12 +12,12 @@ import scala.swing.event.TableRowsSelected
 
 object MessBusterGUI extends SimpleSwingApplication {
 
-//  private lazy val dstDirChooser = buildDirChooser(false)
+  //  private lazy val dstDirChooser = buildDirChooser(false)
 
-//  def buildDirChooser(multiSelect: Boolean) = new FileChooser {
-//    fileSelectionMode = FileChooser.SelectionMode.DirectoriesOnly
-//    multiSelectionEnabled = multiSelect
-//  }
+  //  def buildDirChooser(multiSelect: Boolean) = new FileChooser {
+  //    fileSelectionMode = FileChooser.SelectionMode.DirectoriesOnly
+  //    multiSelectionEnabled = multiSelect
+  //  }
 
   private lazy val srcTableModel = new MyTableModel
 
@@ -39,15 +39,16 @@ object MessBusterGUI extends SimpleSwingApplication {
 
     private val targetChooser = new TargetDirChooser
 
-    val runButton = new Button(Action("Run") {
-      setEnabled(false)
-      try {
-        Qmdt.fire(srcTableModel.getData, targetChooser.getFile)
-      } finally {
-        setEnabled(true)
+    val runButton = new Button("Run") {
+      action = Action("Run") {
+        setEnabled(false)
+        try {
+          Qmdt.fire(srcTableModel.getData, targetChooser.getFile)
+        } finally {
+          setEnabled(true)
+        }
       }
-    }) {
-      enabled = false
+      //      enabled = false
     }
 
     val quitButton = new Button(Action("Quit") {

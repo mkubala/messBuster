@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.model.domain.field
+package pl.mkubala.messBuster.model.domain.field
 
 import org.specs2.mutable.Specification
 

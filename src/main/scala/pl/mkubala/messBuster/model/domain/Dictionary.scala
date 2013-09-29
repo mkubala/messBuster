@@ -1,6 +1,6 @@
-package pl.mkubala.qmdt.model.domain
+package pl.mkubala.messBuster.model.domain
 
-import pl.mkubala.qmdt.plugin.domain.PluginDescriptor
+import pl.mkubala.messBuster.plugin.domain.PluginDescriptor
 
 case class Dictionary(name: String, items: List[DictionaryItem] = Nil) {
   def withItem(item: DictionaryItem) = {

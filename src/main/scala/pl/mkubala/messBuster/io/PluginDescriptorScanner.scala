@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.io
+package pl.mkubala.messBuster.io
 
 import java.io.File
 

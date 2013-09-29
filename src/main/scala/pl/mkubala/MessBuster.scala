@@ -2,12 +2,12 @@ package pl.mkubala
 
 import java.io.{File, PrintWriter}
 import scala.xml.{Node, Utility}
-import pl.mkubala.qmdt.io.PluginDescriptorScanner
-import pl.mkubala.qmdt.model.domain.{ModelHook, ModelIdentifier}
-import pl.mkubala.qmdt.model.domain.field.Field
-import pl.mkubala.qmdt.plugin.container.PluginsHolder
-import pl.mkubala.qmdt.plugin.domain.{Plugin, PluginDescriptor}
-import pl.mkubala.qmdt.model.domain.InjectorPlugin
+import pl.mkubala.messBuster.io.PluginDescriptorScanner
+import pl.mkubala.messBuster.model.domain.{ModelHook, ModelIdentifier}
+import pl.mkubala.messBuster.model.domain.field.Field
+import pl.mkubala.messBuster.plugin.container.PluginsHolder
+import pl.mkubala.messBuster.plugin.domain.{Plugin, PluginDescriptor}
+import pl.mkubala.messBuster.model.domain.InjectorPlugin
 import org.apache.commons.io.FileUtils
 
 trait OutputSerializer {
@@ -145,7 +145,7 @@ class WorldBuilder(skelPath: String) {
 
 object Qmdt extends PluginDescriptorScanner with JsonSerializer with FilePersister {
 
-  import pl.mkubala.qmdt.plugin.domain._
+  import pl.mkubala.messBuster.plugin.domain._
 
 //  def main(args: Array[String]) {
 //    val appArgs = new AppArguments(args)

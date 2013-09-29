@@ -1,4 +1,4 @@
-package pl.mkubala.qmdt.model.domain
+package pl.mkubala.messBuster.model.domain
 
 import scala.xml.Node
 import scala.xml.Utility.trim
