@@ -1,16 +1,21 @@
 package pl.mkubala.messBuster.plugin.domain
 
+import scala.collection.immutable.Seq
 import scala.xml.Node
 
-case class PluginInfo(group: String = "", isSystem: Boolean = false, version: String = "", name: String = "", description: String = "", license: String = "")
+case class PluginInfo(
+                       group: String = "",
+                       isSystem: Boolean = false,
+                       version: String = "",
+                       name: String = "",
+                       description: String = "",
+                       license: String = "",
+                       dependencies: Seq[String] = Vector())
 
 object PluginInfo {
 
   private val getAttr = (node: Node, attrName: String) =>
-    node.attribute(attrName) match {
-      case Some(value) => value.text
-      case None => ""
-    }
+    node.attribute(attrName).map(_.text).getOrElse("")
 
   def apply(descriptor: PluginDescriptor): PluginInfo = {
     val informationNode = descriptor.xml \ "information"
@@ -22,12 +27,14 @@ object PluginInfo {
 
     val version = getAttr(descriptor.xml, "version")
 
+    val dependencies = (descriptor.xml \ "dependencies" \ "dependency").map(_ \ "plugin" text)
+
     val isSystem = descriptor.xml.attribute("system") match {
       case Some(value) => value.text.toBoolean
       case None => false
     }
 
-    PluginInfo(group, isSystem, version, name, description, license)
+    PluginInfo(group, isSystem, version, name, description, license, dependencies)
   }
 
 }

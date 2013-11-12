@@ -8,10 +8,6 @@ import pl.mkubala.messBuster.model.domain.DictionaryItem
 
 case class Plugin(identifier: String, pluginInfo: PluginInfo, models: Map[String, Model] = Map(), dictionaries: List[Dictionary] = Nil) {
 
-  private def copy(models: Map[String, Model] = models, dictionaries: List[Dictionary] = dictionaries) = {
-    Plugin(identifier, pluginInfo, models, dictionaries)
-  }
-
   def withModel(model: Model) =
     copy(models = models + (model.name -> model))
 
