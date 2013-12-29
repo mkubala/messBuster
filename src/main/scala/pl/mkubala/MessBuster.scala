@@ -1,14 +1,18 @@
 package pl.mkubala
 
-import java.io.{File, PrintWriter}
+import java.io.File
 import scala.xml.{Node, Utility}
-import pl.mkubala.messBuster.io.PluginDescriptorScanner
-import pl.mkubala.messBuster.model.domain.{ModelHook, ModelIdentifier}
+import pl.mkubala.messBuster.io._
+import pl.mkubala.messBuster.model.domain.ModelHook
 import pl.mkubala.messBuster.model.domain.field.Field
 import pl.mkubala.messBuster.plugin.container.PluginsHolder
 import pl.mkubala.messBuster.plugin.domain.{Plugin, PluginDescriptor}
+import pl.mkubala.messBuster.cli.{ConfigParametersProvider, ParametersProvider}
+import com.typesafe.scalalogging.slf4j.Logging
 import pl.mkubala.messBuster.model.domain.InjectorPlugin
-import org.apache.commons.io.FileUtils
+import scala.util.{Try, Success, Failure}
+import scala.Some
+import pl.mkubala.messBuster.model.domain.ModelIdentifier
 
 trait OutputSerializer {
   type OutputFormat
@@ -34,24 +38,6 @@ trait JsonSerializer extends OutputSerializer {
     """.format(jsonStr)
   }
 
-}
-
-trait FilePersister {
-
-  def persist(path: String, data: String) {
-    val directory = new File(path)
-    if (directory.isDirectory) {
-      val file = new File(path + "/data.js")
-      val out = new PrintWriter(file, "UTF-8")
-      try {
-        out.println(data)
-      } finally {
-        out.close()
-      }
-    } else {
-      println("no files found")
-    }
-  }
 }
 
 trait FieldsParser {
@@ -106,53 +92,29 @@ object ExternalHooksParser extends HooksParser {
   }
 }
 
-class AppArguments(private val args: Array[String]) {
-
-  require(!args.isEmpty)
-  val searchDirs = args.foldLeft(Seq[File]())((files: Seq[File], path: String) => {
-    val file = new File(path)
-    if (file.isDirectory)
-      files :+ file
-    else
-      files
-  })
-  val dstDir = new File("output")
-
+trait Qmdt {
+  this: ParametersProvider with Persister with AssetsManager with ParametersProvider =>
 }
 
-class WorldBuilder(skelPath: String) {
-
-  val skelDir = new File(this.getClass.getClassLoader.getResource(skelPath).toURI)
-  require(skelDir.isDirectory)
-
-  def build(json: String, destDir: File) {
-    require(destDir.isDirectory)
-    FileUtils.copyDirectory(skelDir, destDir)
-    persistData(json, destDir)
-  }
-
-  private def persistData(json: String, destDir: File) {
-    val file = new File(destDir.getAbsolutePath + "/data.js")
-    val out = new PrintWriter(file, "UTF-8")
-    try {
-      out.println(json)
-    } finally {
-      out.close()
-    }
-  }
-
-}
-
-object Qmdt extends PluginDescriptorScanner with JsonSerializer with FilePersister {
+object Qmdt extends Qmdt
+with PluginDescriptorScanner
+with JsonSerializer
+with FilePersister
+with ConfigParametersProvider
+with JarAssetsManager
+with PathsNormalizer
+with Logging {
 
   import pl.mkubala.messBuster.plugin.domain._
 
-//  def main(args: Array[String]) {
-//    val appArgs = new AppArguments(args)
-//    fire(appArgs.searchDirs, appArgs.dstDir)
-//  }
+  val assetsRootPath: String = "skel/"
 
-  def fire(srcDirs: Seq[File], dstDir: File) {
+  def fire() {
+    val srcDirs = dirsToScan map {
+      path =>
+        new File(toAbsolutePath(path))
+    }
+
     val foundDescriptorFiles = srcDirs flatMap findRecursive
     val pluginDescriptors: Seq[PluginDescriptor] = foundDescriptorFiles map (PluginDescriptor(_)) withFilter (_.isDefined) map (_.get)
 
@@ -175,6 +137,21 @@ object Qmdt extends PluginDescriptorScanner with JsonSerializer with FilePersist
       (hookExtension) => pluginsHolder.injectHook(hookExtension._1, hookExtension._2)
     }
 
-    new WorldBuilder("./skel").build(serialize(pluginsHolder.getPlugins), dstDir)
+    Try(new File(toAbsolutePath(outputDir))).flatMap(dstDir =>
+      copyAssetsTo(dstDir).flatMap {
+        _ => {
+          persist {
+            serialize(pluginsHolder.getPlugins)
+          }(dstDir)
+        }
+      }
+    ) match {
+      case Failure(cause) => logger.error("Can't build docs", cause)
+      case Success(()) => logger.info(s"Docs successfully generated in $outputDir")
+    }
   }
+}
+
+object Main extends App {
+  Qmdt.fire()
 }

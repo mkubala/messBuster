@@ -9,10 +9,7 @@ trait PluginDescriptorScanner {
   def findRecursive(directory: File): List[File] =
     if (directory.isDirectory) {
       val subDirsPlugins = (directory.listFiles withFilter (_.isDirectory) flatMap findRecursive).toList
-      tryLoadPluginDescriptor(directory) match {
-        case Some(pluginDesc) => pluginDesc :: subDirsPlugins
-        case None => subDirsPlugins
-      }
+      tryLoadPluginDescriptor(directory).map(_ :: subDirsPlugins).getOrElse(subDirsPlugins)
     } else {
       List()
     }
