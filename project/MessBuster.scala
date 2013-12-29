@@ -16,8 +16,11 @@ object MessBuster extends Build {
         "org.json4s" %% "json4s-native" % "3.2.5",
         "org.specs2" %% "specs2" % "2.0" % "test",
         "commons-io" % "commons-io" % "2.4",
-        "org.scala-lang" % "scala-swing" % "2.10.2")
-    ) ++ SbtOneJar.oneJarSettings
+        "org.scala-lang" % "scala-swing" % "2.10.2",
+        "com.typesafe" % "config" % "1.0.2",
+        "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
+        "org.slf4j" % "slf4j-log4j12" % "1.7.5")
+    ) ++ SbtOneJar.oneJarSettings ++ sbtassembly.Plugin.assemblySettings
   )
 
 }
