@@ -1,4 +1,3 @@
-import com.github.retronym.SbtOneJar
 import sbt._
 import sbt.Keys._
 
@@ -20,7 +19,7 @@ object MessBuster extends Build {
         "com.typesafe" % "config" % "1.0.2",
         "com.typesafe" %% "scalalogging-slf4j" % "1.0.1",
         "org.slf4j" % "slf4j-log4j12" % "1.7.5")
-    ) ++ SbtOneJar.oneJarSettings ++ sbtassembly.Plugin.assemblySettings
+    ) ++ sbtassembly.Plugin.assemblySettings
   )
 
 }
