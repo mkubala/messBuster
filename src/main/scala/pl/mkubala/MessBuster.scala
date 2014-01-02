@@ -31,7 +31,6 @@ trait JsonSerializer extends OutputSerializer {
 
   override def serialize(input: Map[String, Plugin]) = {
     val jsonStr = writePretty(input)
-    println(jsonStr)
     """
       var QMDT = QMDT || {};
       QMDT.data = %s;
@@ -110,46 +109,85 @@ with Logging {
   val assetsRootPath: String = "skel/"
 
   def fire() {
-    val srcDirs = dirsToScan map {
+
+    val srcDirsOrFailure: Try[List[File]] = (dirsToScan map {
       path =>
-        new File(toAbsolutePath(path))
+        Try {
+          new File(toAbsolutePath(path))
+        }
+    }).foldLeft(Try(List.empty[File])) {
+      (dirsSeqOrFailure, dirOrFailure) =>
+        for {
+          dirs <- dirsSeqOrFailure
+          dir <- dirOrFailure
+        } yield dir :: dirs
     }
 
-    val foundDescriptorFiles = srcDirs flatMap findRecursive
-    val pluginDescriptors: Seq[PluginDescriptor] = foundDescriptorFiles map (PluginDescriptor(_)) withFilter (_.isDefined) map (_.get)
+    val descriptorFilesOrFailure: Try[List[File]] = srcDirsOrFailure map {
+      srcDirsSeq =>
+        srcDirsSeq.flatMap(findRecursive)
+    }
+
+    val pluginDescriptorsOrFailure: Try[List[PluginDescriptor]] = descriptorFilesOrFailure flatMap {
+      descriptorFilesSeq =>
+        val filesAndDescriptors = descriptorFilesSeq.zip(descriptorFilesSeq.map(PluginDescriptor.apply))
+        filesAndDescriptors.foldLeft(Try(List.empty[PluginDescriptor])) {
+          (descriptorsSeqOrFailure, fileAndDescriptorOrFailurePair) =>
+            for {
+              descriptorsSeq <- descriptorsSeqOrFailure
+            } yield {
+              val (file, descriptorOrFailure) = fileAndDescriptorOrFailurePair
+              descriptorOrFailure match {
+                case Failure(cause) =>
+                  logger.error(s"Can't parse ${file.getAbsolutePath}", cause)
+                  descriptorsSeq
+                case Success(descriptor) =>
+                  descriptor :: descriptorsSeq
+              }
+            }
+        }
+    }
 
     val pluginsHolder = new PluginsHolder with FieldsInjector with HooksInjector
 
-    pluginDescriptors foreach {
-      (pluginDescriptor) =>
-        pluginsHolder.addPlugin(Plugin(pluginDescriptor))
-    }
-
-    //    val models = (pluginDescriptors flatMap (QcadooModelParser.buildModels))
-    //    models foreach (pluginsHolder.addModel(_))
-
-    val injectedFields = pluginDescriptors flatMap ExternalFieldsParser.parseFields
-    injectedFields foreach {
-      (fieldExtension) => pluginsHolder.injectField(fieldExtension._1, fieldExtension._2)
-    }
-
-    (pluginDescriptors flatMap ExternalHooksParser.parseHooks) foreach {
-      (hookExtension) => pluginsHolder.injectHook(hookExtension._1, hookExtension._2)
-    }
-
-    Try(new File(toAbsolutePath(outputDir))).flatMap(dstDir =>
-      copyAssetsTo(dstDir).flatMap {
-        _ => {
-          persist {
-            serialize(pluginsHolder.getPlugins)
-          }(dstDir)
-        }
+    pluginDescriptorsOrFailure foreach {
+      _ foreach {
+        descriptor =>
+          pluginsHolder.addPlugin(Plugin(descriptor))
       }
-    ) match {
+    }
+
+    pluginDescriptorsOrFailure foreach {
+      _ foreach {
+        descriptor =>
+          for {
+            (model, field) <- ExternalFieldsParser.parseFields(descriptor)
+          } pluginsHolder.injectField(model, field)
+
+          for {
+            (model, hook) <- ExternalHooksParser.parseHooks(descriptor)
+          } pluginsHolder.injectHook(model, hook)
+      }
+    }
+
+    pluginDescriptorsOrFailure flatMap {
+      _ =>
+        val outputPath = toAbsolutePath(outputDir)
+        Try(new File(outputPath)).flatMap(dstDir =>
+          copyAssetsTo(dstDir).flatMap {
+            _ => {
+              persist {
+                serialize(pluginsHolder.getPlugins)
+              }(dstDir)
+            }
+          }
+        )
+    } match {
       case Failure(cause) => logger.error("Can't build docs", cause)
       case Success(()) => logger.info(s"Docs successfully generated in $outputDir")
     }
   }
+
 }
 
 object Main extends App {
