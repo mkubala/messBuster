@@ -1,5 +1,8 @@
 MessBuster
 ==========
+MASTER: [![Build Status](https://travis-ci.org/mkubala/messBuster.png?branch=master)](https://travis-ci.org/mkubala/messBuster)
+DEV: [![Build Status](https://travis-ci.org/mkubala/messBuster.png?branch=dev)](https://travis-ci.org/mkubala/messBuster)
+
 Documentation tool for Qcadoo Framework.
 
 Powered by Scala, Json4s, AngularJS, Typesafe's Config & Logging, Sbt
