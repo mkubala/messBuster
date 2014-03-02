@@ -34,7 +34,7 @@ trait JsonSerializer extends OutputSerializer with Logging {
   override def serialize(input: Map[String, Plugin]) = {
     val jsonStr = writePretty(input)
     logger.debug(s"Result JSON: \n$jsonStr")
-    """var QMDT = QMDT || {}; QMDT.data = %s;""".stripMargin.format(jsonStr)
+    """var QMDT = QMDT || {}; QMDT.data = %s;""".format(jsonStr)
   }
 
 }

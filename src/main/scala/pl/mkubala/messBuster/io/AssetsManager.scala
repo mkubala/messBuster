@@ -22,8 +22,8 @@ trait JarAssetsManager extends AssetsManager with Logging {
   this: ParametersProvider =>
 
   def copyAssetsTo(targetRoot: File): Try[Unit] = {
-    require(targetRoot.exists && targetRoot.isDirectory, s"Output directory (${targetRoot.getAbsolutePath}) have to be a directory.")
     require(targetRoot.canWrite, s"Can't write to ${targetRoot.getAbsolutePath}")
+    require(targetRoot.isDirectory || targetRoot.mkdir(), s"Can't create output directory (${targetRoot.getAbsolutePath})")
     val assetsRootPathLength = assetsRootPath.length
     getAssetPaths(assetsRootPath).flatMap(_.foldLeft(Try()) {
       (res: Try[Unit], path: String) =>
@@ -39,10 +39,9 @@ trait JarAssetsManager extends AssetsManager with Logging {
   private def getAssetPaths(assetsRootPath: String): Try[Set[String]] = Try {
     val jarPath = Main.getClass.getProtectionDomain.getCodeSource.getLocation.getPath
     val jar = new JarFile(jarPath)
-    JEnumerationWrapper(jar.entries()) withFilter {
-      entry =>
+    JEnumerationWrapper(jar.entries()).withFilter(entry =>
         !entry.isDirectory && entry.getName.startsWith(assetsRootPath)
-    } map (_.getName) toSet
+      ).map(_.getName).toSet
   }
 
 }
