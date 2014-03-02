@@ -7,6 +7,7 @@ import java.util.jar.JarFile
 import scala.collection.convert.Wrappers.JEnumerationWrapper
 import org.apache.commons.io.FileUtils
 import pl.mkubala.messBuster.cli.ParametersProvider
+import pl.mkubala.Main
 
 
 trait AssetsManager {
@@ -36,7 +37,8 @@ trait JarAssetsManager extends AssetsManager with Logging {
   }
 
   private def getAssetPaths(assetsRootPath: String): Try[Set[String]] = Try {
-    val jar = new JarFile(getProperty("java.class.path"))
+    val jarPath = Main.getClass.getProtectionDomain.getCodeSource.getLocation.getPath
+    val jar = new JarFile(jarPath)
     JEnumerationWrapper(jar.entries()) withFilter {
       entry =>
         !entry.isDirectory && entry.getName.startsWith(assetsRootPath)

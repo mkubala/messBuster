@@ -6,24 +6,19 @@ import java.io.File
 import pl.mkubala.messBuster.plugin.container.PluginsHolder
 import pl.mkubala.messBuster.model.domain._
 import pl.mkubala.messBuster.model.domain.field.Field
+import scala.util.Try
 
 case class PluginDescriptor(identifier: String, resourcesPath: String, xml: Node)
 
 object PluginDescriptor {
 
-  def apply(file: File): Option[PluginDescriptor] = {
+  def apply(file: File): Try[PluginDescriptor] = {
     val resourcePath = file.getParentFile.getAbsolutePath
-    try {
+    Try {
       val xml = XML.loadFile(file)
 
       val pluginName = (xml \ "@plugin").text
-      Some(PluginDescriptor(pluginName, resourcePath, xml))
-    } catch {
-      case ex : Throwable => {
-        println(file)
-        ex.printStackTrace()
-        None
-      }
+      PluginDescriptor(pluginName, resourcePath, xml)
     }
   }
 

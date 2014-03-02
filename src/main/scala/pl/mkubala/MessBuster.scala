@@ -3,15 +3,17 @@ package pl.mkubala
 import java.io.File
 import scala.xml.{Node, Utility}
 import pl.mkubala.messBuster.io._
-import pl.mkubala.messBuster.model.domain.ModelHook
+import pl.mkubala.messBuster.model.domain.{QcadooModelParser, ModelHook}
 import pl.mkubala.messBuster.model.domain.field.Field
 import pl.mkubala.messBuster.plugin.container.PluginsHolder
 import pl.mkubala.messBuster.plugin.domain.{Plugin, PluginDescriptor}
 import pl.mkubala.messBuster.cli.{ConfigParametersProvider, ParametersProvider}
 import com.typesafe.scalalogging.slf4j.Logging
+import scala.util.Try
 import pl.mkubala.messBuster.model.domain.InjectorPlugin
-import scala.util.{Try, Success, Failure}
+import scala.util.Failure
 import scala.Some
+import scala.util.Success
 import pl.mkubala.messBuster.model.domain.ModelIdentifier
 
 trait OutputSerializer {
@@ -20,7 +22,7 @@ trait OutputSerializer {
   def serialize(input: Map[String, Plugin]): OutputFormat
 }
 
-trait JsonSerializer extends OutputSerializer {
+trait JsonSerializer extends OutputSerializer with Logging {
 
   override type OutputFormat = String
 
@@ -31,11 +33,8 @@ trait JsonSerializer extends OutputSerializer {
 
   override def serialize(input: Map[String, Plugin]) = {
     val jsonStr = writePretty(input)
-    println(jsonStr)
-    """
-      var QMDT = QMDT || {};
-      QMDT.data = %s;
-    """.format(jsonStr)
+    logger.debug(s"Result JSON: \n$jsonStr")
+    """var QMDT = QMDT || {}; QMDT.data = %s;""".stripMargin.format(jsonStr)
   }
 
 }
@@ -93,7 +92,7 @@ object ExternalHooksParser extends HooksParser {
 }
 
 trait Qmdt {
-  this: ParametersProvider with Persister with AssetsManager with ParametersProvider =>
+  this: ParametersProvider with Persister[File] with AssetsManager with ParametersProvider =>
 }
 
 object Qmdt extends Qmdt
@@ -110,45 +109,64 @@ with Logging {
   val assetsRootPath: String = "skel/"
 
   def fire() {
-    val srcDirs = dirsToScan map {
+    val srcDirs: List[File] = (dirsToScan map {
       path =>
-        new File(toAbsolutePath(path))
+        (path, Try(new File(toAbsolutePath(path))))
+    }).foldLeft(List.empty[File]) {
+      (acc, t) =>
+        t match {
+          case (_, Success(file)) if file.exists() => file :: acc
+          case (path, Success(file)) => {
+            logger.warn(s"Directory $path doesn't exist - excluding from further processing")
+            acc
+          }
+          case (path, Failure(cause)) => {
+            logger.error(s"Can't read $path", cause)
+            acc
+          }
+        }
     }
 
-    val foundDescriptorFiles = srcDirs flatMap findRecursive
-    val pluginDescriptors: Seq[PluginDescriptor] = foundDescriptorFiles map (PluginDescriptor(_)) withFilter (_.isDefined) map (_.get)
+    logger.debug(s"srcDirs = $srcDirs")
+    val foundDescriptorFiles = srcDirs.flatMap(findRecursive)
+    logger.debug(s"descriptor files: ${foundDescriptorFiles}")
 
+    val pluginDescriptors: Seq[PluginDescriptor] = foundDescriptorFiles.foldLeft(Vector.empty[PluginDescriptor]) {
+      (acc, file) =>
+            PluginDescriptor.apply(file) match {
+              case Success(plugin) => acc :+ plugin
+              case Failure(cause) => acc
+            }
+        }
     val pluginsHolder = new PluginsHolder with FieldsInjector with HooksInjector
 
-    pluginDescriptors foreach {
-      (pluginDescriptor) =>
-        pluginsHolder.addPlugin(Plugin(pluginDescriptor))
-    }
+    logger.debug(pluginDescriptors.mkString(", "))
+    pluginDescriptors.foreach(descriptor => pluginsHolder.addPlugin(Plugin(descriptor)))
 
-    //    val models = (pluginDescriptors flatMap (QcadooModelParser.buildModels))
-    //    models foreach (pluginsHolder.addModel(_))
+    val models = (pluginDescriptors flatMap (QcadooModelParser.buildModels))
+    models foreach (pluginsHolder.addModel(_))
 
-    val injectedFields = pluginDescriptors flatMap ExternalFieldsParser.parseFields
-    injectedFields foreach {
-      (fieldExtension) => pluginsHolder.injectField(fieldExtension._1, fieldExtension._2)
-    }
+    val injectedFields: Seq[(ModelIdentifier, Field)] = pluginDescriptors flatMap ExternalFieldsParser.parseFields
+    for {
+      (model, field) <- injectedFields
+    } pluginsHolder.injectField(model, field)
 
-    (pluginDescriptors flatMap ExternalHooksParser.parseHooks) foreach {
-      (hookExtension) => pluginsHolder.injectHook(hookExtension._1, hookExtension._2)
-    }
+    for {
+      descriptor <- pluginDescriptors
+      (model, hook) <- ExternalHooksParser.parseHooks(descriptor)
+    } pluginsHolder.injectHook(model, hook)
 
-    Try(new File(toAbsolutePath(outputDir))).flatMap(dstDir =>
-      copyAssetsTo(dstDir).flatMap {
-        _ => {
-          persist {
-            serialize(pluginsHolder.getPlugins)
-          }(dstDir)
+    val dstDir = new File(toAbsolutePath(outputDir))
+      copyAssetsTo(dstDir) match {
+        case Failure(cause) => logger.error("Can't copy assets", cause)
+        case Success(_) => persist {
+          logger.debug(s"Result map: \n${pluginsHolder.getPlugins}")
+          serialize(pluginsHolder.getPlugins)
+        }(dstDir) match {
+          case Failure(cause) => logger.error("Can't serialize/write data", cause)
+          case Success(_) => logger.info(s"Docs successfully generated in $outputDir")
         }
       }
-    ) match {
-      case Failure(cause) => logger.error("Can't build docs", cause)
-      case Success(()) => logger.info(s"Docs successfully generated in $outputDir")
-    }
   }
 }
 
