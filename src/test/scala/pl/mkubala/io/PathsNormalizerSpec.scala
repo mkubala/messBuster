@@ -1,24 +1,27 @@
 package pl.mkubala.io
 
-import pl.mkubala.messBuster.cli.ParametersProvider
+import pl.mkubala.messBuster.cli.ParametersAware
 import scala.collection.immutable.Seq
 import pl.mkubala.messBuster.io.PathsNormalizer
 import org.specs2.mutable.Specification
 
 class PathsNormalizerSpec extends Specification {
 
-  trait ParameterProviderMock extends ParametersProvider {
-    def getProperty(key: String): String = key match {
-      case "user.home" => "/home/user/mb"
-      case "user.dir" => "/usr/local/mb"
+  trait ParametersAwareMock extends ParametersAware {
+    protected val parameters = new ParametersProvider {
+
+      def getProperty(key: String): String = key match {
+        case "user.home" => "/home/user/mb"
+        case "user.dir" => "/usr/local/mb"
+      }
+
+      def outputDir: String = "out"
+
+      def dirsToScan: Seq[String] = Seq("in1", "in2")
     }
-
-    def outputDir: String = "out"
-
-    def dirsToScan: Seq[String] = Seq("in1", "in2")
   }
 
-  val pathsNormalizer = new PathsNormalizer with ParameterProviderMock
+  val pathsNormalizer = new PathsNormalizer with ParametersAwareMock
 
   "PathsNormalizer" should {
 

@@ -7,16 +7,22 @@ import pl.mkubala.messBuster.plugin.domain.PluginDescriptor
 import pl.mkubala.messBuster.model.domain.field.Field
 import pl.mkubala.xml.NodeAttributesReader
 
-case class Model(pluginIdentifier: String, name: String, fields: List[Field] = Nil, hooks: List[ModelHook] = Nil, attributes: ModelAttributes) {
+case class Model(
+                  pluginIdentifier: String,
+                  name: String,
+                  fields: List[Field] = Nil,
+                  hooks: List[ModelHook] = Nil,
+                  attributes: ModelAttributes,
+                  constantClass: ModelConstants) {
 
-  def withField(field: Field) =
-    Model(pluginIdentifier, name, field :: fields, hooks, attributes)
+  def withField(field: Field) = copy(fields = field :: fields)
 
-  def withHook(hook: ModelHook) =
-    Model(pluginIdentifier, name, fields, hook :: hooks, attributes)
+  def withHook(hook: ModelHook) = copy(hooks = hook :: hooks)
 }
 
 case class ModelIdentifier(pluginIdentifier: String, modelName: String)
+
+case class ModelConstants(generatedSource: String)
 
 object QcadooModelParser {
 
@@ -35,9 +41,35 @@ object Model {
     val modelName = (modelXmlRoot \ "@name").text
     val hooks = ((modelXmlRoot \ "hooks") flatMap (_.child map (ModelHook(_)))).toList
     val fields = ((modelXmlRoot \ "fields") flatMap (_.child map (Field(_)))).toList
+    val modelConstants = ModelConstantsBuilder.build(modelName, fields)
 
-    Model(plugin.identifier, modelName, fields, hooks, ModelAttributes(modelXmlRoot))
+    Model(plugin.identifier, modelName, fields, hooks, ModelAttributes(modelXmlRoot), modelConstants)
   }
+}
+
+object ModelConstantsBuilder {
+
+  def build(modelName: String, fields: Seq[Field]): ModelConstants = {
+    val className: String = modelName.head.toUpper + modelName.tail + "Fields"
+    val sortedFieldNames = fields.map(_.name).sorted
+    val sortedConstantsNames = sortedFieldNames.map(_.foldLeft("")((acc, ch) => {
+      if (ch.isUpper) {
+        acc + '_' + ch
+      } else {
+        acc + ch.toUpper
+      }
+    }))
+    val prolog: String = s"""public final class $className {""" + "\n\n" +
+    s"""    private $className() {}""" + '\n'
+
+    val generatedSource = sortedConstantsNames.zip(sortedFieldNames).foldLeft(prolog)(
+      (acc, f) => {
+        val (constantName, fieldName) = f
+        acc + '\n' + s"""    public static final String $constantName = "$fieldName";""" + '\n'
+    }) + "\n}\n"
+    ModelConstants(generatedSource)
+  }
+
 }
 
 case class ModelAttributes(

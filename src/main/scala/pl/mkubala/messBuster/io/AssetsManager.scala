@@ -6,7 +6,6 @@ import com.typesafe.scalalogging.slf4j.Logging
 import java.util.jar.JarFile
 import scala.collection.convert.Wrappers.JEnumerationWrapper
 import org.apache.commons.io.FileUtils
-import pl.mkubala.messBuster.cli.ParametersProvider
 import pl.mkubala.Main
 
 
@@ -19,7 +18,8 @@ trait AssetsManager {
 }
 
 trait JarAssetsManager extends AssetsManager with Logging {
-  this: ParametersProvider =>
+
+  val assetsRootPath: String = "skel/"
 
   def copyAssetsTo(targetRoot: File): Try[Unit] = {
     require(targetRoot.canWrite, s"Can't write to ${targetRoot.getAbsolutePath}")
