@@ -45,4 +45,6 @@ messBuster.dirsToScan = [
 ```
 See also https://github.com/mkubala/messBuster/blob/dev/src/main/resources/application.conf - this configuration will be used if you don't specify config path or url
 
-
+#### More about configuration's syntax
+* https://github.com/typesafehub/config/blob/master/HOCON.md
+* http://marcinkubala.wordpress.com/2013/10/09/typesace-config-hocon/
