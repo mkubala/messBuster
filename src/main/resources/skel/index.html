@@ -106,6 +106,14 @@
             </li>
         </ul>
 
+        <h4>Models</h4>
+
+        <ul>
+            <li ng-repeat="model in plugin.models">
+                <a href="#/model/{{model.pluginIdentifier}}-{{model.name}}">{{model.name}}</a>
+            </li>
+        </ul>
+
         <h4>Constants</h4>
 
         <p>TODO</p>
