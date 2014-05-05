@@ -4,10 +4,11 @@
     <meta charset="UTF-8"/>
     <title>MessBuster v0.1-SNAPSHOT</title>
     <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen"/>
+    <link href="graph.css" rel="stylesheet" media="screen"/>
 
     <style>
         body {
-        padding-top: 55px;
+            padding-top: 55px;
         }
     </style>
 </head>
@@ -49,7 +50,9 @@
 </div>
 
 <script src="data.js"></script>
+<script src="lib/d3.min.js"></script>
 <script src="lib/angular/angular.min.js"></script>
+<script src="js/dependencyGraph.js"></script>
 <script src="js/controllers.js"></script>
 <!-- <script src="lib/bootstrap/js/bootstrap.min.js"></script> -->
 
@@ -97,6 +100,14 @@
 
         <p>{{plugin.pluginInfo.description}}</p>
 
+        <h4>Models</h4>
+
+        <ul>
+            <li ng-repeat="model in plugin.models">
+                <a href="#/model/{{model.pluginIdentifier}}-{{model.name}}">{{model.name}}</a>
+            </li>
+        </ul>
+
         <h4>Dependencies ({{plugin.pluginInfo.dependencies.length}})</h4>
 
         <p ng-show="plugin.pluginInfo.dependencies.length == 0">There is no dependencies to display</p>
@@ -106,13 +117,10 @@
             </li>
         </ul>
 
-        <h4>Models</h4>
-
-        <ul>
-            <li ng-repeat="model in plugin.models">
-                <a href="#/model/{{model.pluginIdentifier}}-{{model.name}}">{{model.name}}</a>
-            </li>
-        </ul>
+        <h6>Dependency graph</h6>
+        <div id="dependencies" class="graph">
+            {{createGraph()}}
+        </div>
 
         <h4>Constants</h4>
 

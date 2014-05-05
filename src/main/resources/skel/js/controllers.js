@@ -1,4 +1,5 @@
-var qma = angular.module('qma', []);
+var qma = angular.module('qma', []),
+    graph = new QMDT.graphs.DependenciesGraph(QMDT.data);
 
 function ModelDetailsCtrl($scope, $routeParams) {
 	
@@ -38,6 +39,9 @@ function ModelDetailsCtrl($scope, $routeParams) {
 
 function PluginDetailsCtrl($scope, $routeParams) {
 	$scope.plugin = $scope.plugins[$routeParams.pluginIdentifier];
+    $scope.createGraph = function () {
+        graph.renderFor($scope.plugin);
+    };
 }
 
 qma.directive('scrollIf', function () {
