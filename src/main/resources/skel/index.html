@@ -26,7 +26,11 @@
                         Disable verbose mode
                     </button>
                 </div>
-                <!-- <input id="verbose" type="checkbox" ng-model="verbose" /><label for="verbose">verbose mode?</label> -->
+            </li>
+            <li>
+                <a href="#/problems">
+                    <button type="button" class="btn btn-danger">Problems</button>
+                </a>
             </li>
         </ul>
     </div>
@@ -86,6 +90,19 @@
                         <a href="#/model/{{plugin.name}}-{{model.name}}">{{model.name}}</a>
                     </li>
                 </ul>
+            </li>
+        </ul>
+    </div>
+</script>
+
+<script type="text/ng-template" id="problems.html">
+    <div>
+        <h3>Detected problems</h3>
+
+        <h4>'Blind' BelongsTo fields ({{size(problems.blindBtFields)}})</h4>
+        <ul>
+            <li ng-repeat="(modelPath, fieldName) in problems.blindBtFields">
+                {{modelPath}}/{{fieldName}}
             </li>
         </ul>
     </div>

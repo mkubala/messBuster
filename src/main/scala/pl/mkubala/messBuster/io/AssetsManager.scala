@@ -8,7 +8,6 @@ import scala.collection.convert.Wrappers.JEnumerationWrapper
 import org.apache.commons.io.FileUtils
 import pl.mkubala.Main
 
-
 trait AssetsManager {
 
   val assetsRootPath: String
@@ -40,8 +39,8 @@ trait JarAssetsManager extends AssetsManager with Logging {
     val jarPath = Main.getClass.getProtectionDomain.getCodeSource.getLocation.getPath
     val jar = new JarFile(jarPath)
     JEnumerationWrapper(jar.entries()).withFilter(entry =>
-        !entry.isDirectory && entry.getName.startsWith(assetsRootPath)
-      ).map(_.getName).toSet
+      !entry.isDirectory && entry.getName.startsWith(assetsRootPath)
+    ).map(_.getName).toSet
   }
 
 }

@@ -1,19 +1,28 @@
-package pl.mkubala.messBuster.model.domain
+package pl.mkubala.messBuster.domain.model
 
 import scala.xml.Node
 import scala.xml.Utility.trim
 import scala.xml.XML.loadFile
-import pl.mkubala.messBuster.plugin.domain.PluginDescriptor
-import pl.mkubala.messBuster.model.domain.field.Field
+import pl.mkubala.messBuster.plugin.domain.{ Plugin, PluginDescriptor }
 import pl.mkubala.xml.NodeAttributesReader
+import pl.mkubala.MessBuster.CanInject
+import pl.mkubala.messBuster.domain.model.hook.ModelHook
+import pl.mkubala.messBuster.domain.DocUnit
+import pl.mkubala.messBuster.domain.model.field.Field
+import pl.mkubala.messBuster.parser.ConcreteParser
 
 case class Model(
-                  pluginIdentifier: String,
-                  name: String,
-                  fields: List[Field] = Nil,
-                  hooks: List[ModelHook] = Nil,
-                  attributes: ModelAttributes,
-                  constantClass: ModelConstants) {
+  pluginIdentifier: String,
+  name: String,
+  fields: List[Field] = Nil,
+  hooks: List[ModelHook] = Nil,
+  attributes: ModelAttributes,
+  constantClass: ModelConstants)
+    extends DocUnit {
+
+  type Selector = ModelIdentifier
+
+  def sel = ModelIdentifier(pluginIdentifier, name)
 
   def withField(field: Field) = copy(fields = field :: fields)
 
@@ -26,16 +35,24 @@ case class ModelConstants(generatedSource: String)
 
 object QcadooModelParser {
 
+  import collection.immutable.Seq
+
   def buildModels(plugin: PluginDescriptor): Seq[Model] =
     (plugin.xml \ "modules" \ "model") map (buildModel(plugin, _))
 
   def buildModel(plugin: PluginDescriptor, modelElement: Node) = {
-    val modelPath = plugin.resourcesPath + '/' + plugin.identifier + '/' + (modelElement \ "@resource" text)
+    val modelPath = plugin.resourcesPath + '/' + plugin.identifier + '/' + ((modelElement \ "@resource").text)
     Model(plugin, trim(loadFile(modelPath)))
   }
 }
 
 object Model {
+
+  implicit val canInjectModelToPlugin = new CanInject[Plugin, Model] {
+    override val f = (plugin: Plugin, model: Model) => plugin.copy(models = plugin.models + (model.name -> model))
+  }
+
+  implicit val modelParser = ConcreteParser[Model](QcadooModelParser.buildModels _)
 
   def apply(plugin: PluginDescriptor, modelXmlRoot: Node): Model = {
     val modelName = (modelXmlRoot \ "@name").text
@@ -60,13 +77,13 @@ object ModelConstantsBuilder {
       }
     }))
     val prolog: String = s"""public final class $className {""" + "\n\n" +
-    s"""    private $className() {}""" + '\n'
+      s"""    private $className() {}""" + '\n'
 
     val generatedSource = sortedConstantsNames.zip(sortedFieldNames).foldLeft(prolog)(
       (acc, f) => {
         val (constantName, fieldName) = f
         acc + '\n' + s"""    public static final String $constantName = "$fieldName";""" + '\n'
-    }) + "\n}\n"
+      }) + "\n}\n"
     ModelConstants(generatedSource)
   }
 

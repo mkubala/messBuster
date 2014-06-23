@@ -1,12 +1,18 @@
 package pl.mkubala.messBuster.plugin.domain
 
-import pl.mkubala.messBuster.model.domain.QcadooModelParser
-import pl.mkubala.messBuster.model.domain.Model
 import pl.mkubala.messBuster.model.domain.Dictionary
-import pl.mkubala.messBuster.model.domain.Dictionary
-import pl.mkubala.messBuster.model.domain.DictionaryItem
+import pl.mkubala.messBuster.domain.DocUnit
+import pl.mkubala.messBuster.parser.ConcreteParser
+import pl.mkubala.messBuster.domain.model.Model
 
-case class Plugin(identifier: String, pluginInfo: PluginInfo, models: Map[String, Model] = Map(), dictionaries: List[Dictionary] = Nil) {
+case class Plugin(identifier: String,
+    pluginInfo: PluginInfo,
+    models: Map[String, Model] = Map(),
+    dictionaries: List[Dictionary] = Nil) extends DocUnit {
+
+  type Selector = String
+
+  def sel = identifier
 
   def withModel(model: Model) =
     copy(models = models + (model.name -> model))
@@ -29,10 +35,8 @@ case class Plugin(identifier: String, pluginInfo: PluginInfo, models: Map[String
 
 object Plugin {
 
-  def apply(descriptor: PluginDescriptor): Plugin = {
-    val modelsMap = QcadooModelParser.buildModels(descriptor) map { model =>
-      (model.name -> model)
-    }
-    Plugin(descriptor.identifier, PluginInfo(descriptor), modelsMap.toMap, Dictionary(descriptor))
+  implicit val pluginParser = ConcreteParser { descriptor =>
+    Plugin(descriptor.identifier, PluginInfo(descriptor), Map(), Dictionary(descriptor)) :: Nil
   }
+
 }

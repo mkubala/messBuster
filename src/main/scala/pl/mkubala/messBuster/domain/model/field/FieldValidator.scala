@@ -1,9 +1,8 @@
-package pl.mkubala.messBuster.model.domain.field
+package pl.mkubala.messBuster.domain.model.field
 
 import scala.xml.Node
-import pl.mkubala.messBuster.model.domain.Hook
-import scala.xml.NodeSeq.seqToNodeSeq
 import pl.mkubala.xml.NodeAttributesReader
+import pl.mkubala.messBuster.domain.model.hook.Hook
 
 case class FieldValidator(validatorType: String, hasCorrectFieldType: Boolean, message: Option[String], params: ValidatorParams)
 

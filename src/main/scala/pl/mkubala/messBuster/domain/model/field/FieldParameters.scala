@@ -1,4 +1,4 @@
-package pl.mkubala.messBuster.model.domain.field
+package pl.mkubala.messBuster.domain.model.field
 
 import scala.xml.Node
 import pl.mkubala.xml.NodeAttributesReader

@@ -40,6 +40,10 @@ function PluginDetailsCtrl($scope, $routeParams) {
 	$scope.plugin = $scope.plugins[$routeParams.pluginIdentifier];
 }
 
+function ProblemsCtrl($scope) {
+    $scope.problems = QMDT.problems;
+}
+
 qma.directive('scrollIf', function () {
 	return function (scope, element, attributes) {
 		setTimeout(function () {
@@ -67,6 +71,10 @@ qma.config(['$routeProvider', function ($routeProvider) {
 		templateUrl : 'modelDetails.html',
 		controller : ModelDetailsCtrl
 	})
+    .when('/problems', {
+        templateUrl : 'problems.html',
+        controller : ProblemsCtrl
+    })
 	.otherwise({
 		redirectTo : '/welcome'
 	});

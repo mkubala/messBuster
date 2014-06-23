@@ -1,10 +1,8 @@
-package pl.mkubala.messBuster.model.domain.field
+package pl.mkubala.messBuster.domain.model.field
 
 import scala.xml.Node
-import pl.mkubala.messBuster.model.domain.ModelIdentifier
 import pl.mkubala.xml.NodeAttributesReader
-
-import pl.mkubala.messBuster.model.domain.field.FieldValidator.nodeToFieldValidator
+import pl.mkubala.messBuster.domain.model.ModelIdentifier
 
 object FieldType extends NodeAttributesReader {
 
@@ -62,8 +60,8 @@ trait FieldType {
 }
 
 case class DefaultFieldType(
-  name: String,
-  parameters: FieldParameters) extends FieldType {
+    name: String,
+    parameters: FieldParameters) extends FieldType {
 
 }
 
@@ -82,29 +80,29 @@ trait CharacterLikeFieldType extends FieldType {
 }
 
 case class TextFieldType(
-  name: String,
-  parameters: FieldParameters,
-  expression: Option[String] = None) extends CharacterLikeFieldType {
+    name: String,
+    parameters: FieldParameters,
+    expression: Option[String] = None) extends CharacterLikeFieldType {
   override protected val maxLen = 2048
 }
 
 case class PasswordFieldType(
-  name: String,
-  parameters: FieldParameters,
-  expression: Option[String] = None) extends CharacterLikeFieldType {
+    name: String,
+    parameters: FieldParameters,
+    expression: Option[String] = None) extends CharacterLikeFieldType {
   override protected val maxLen = 255
 }
 
 case class StringFieldType(
-  name: String,
-  parameters: FieldParameters,
-  expression: Option[String] = None) extends CharacterLikeFieldType {
+    name: String,
+    parameters: FieldParameters,
+    expression: Option[String] = None) extends CharacterLikeFieldType {
   override protected val maxLen = 255
 }
 
 case class IntegerFieldType(
-  name: String,
-  parameters: FieldParameters) extends FieldType {
+    name: String,
+    parameters: FieldParameters) extends FieldType {
 
   override protected val compatibleHooks = Set(
     "validatesWith",
@@ -117,8 +115,8 @@ case class IntegerFieldType(
 }
 
 case class DecimalFieldType(
-  name: String,
-  parameters: FieldParameters) extends FieldType {
+    name: String,
+    parameters: FieldParameters) extends FieldType {
 
   override protected val compatibleHooks = Set(
     "validatesWith",
@@ -133,8 +131,8 @@ case class DecimalFieldType(
 }
 
 case class DateFieldType(
-  name: String,
-  parameters: FieldParameters) extends FieldType {
+    name: String,
+    parameters: FieldParameters) extends FieldType {
 
   override protected val compatibleHooks = Set(
     "validatesWith",
@@ -166,8 +164,8 @@ case class EnumFieldType(
   values: Seq[String]) extends FieldType
 
 case class PriorityFieldType(
-  name: String,
-  scope: Option[String] = None) extends FieldType {
+    name: String,
+    scope: Option[String] = None) extends FieldType {
   val parameters = FieldParameters()
 }
 
